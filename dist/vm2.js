@@ -160,7 +160,7 @@ class VM extends EventEmitter {
 			value: vm.runInContext(`(function(require, host) { ${cf} \n})`, this._context, {
 				filename: `${__dirname}/contextify.js`,
 				displayErrors: false
-			}).call(this._context, require, host)
+			}).call(vm.getGlobal(this._context), require, host)
 		});
 
 		// prepare global sandbox
@@ -310,7 +310,7 @@ class NodeVM extends EventEmitter {
 			value: vm.runInContext(`(function(require, host) { ${cf} \n})`, this._context, {
 				filename: `${__dirname}/contextify.js`,
 				displayErrors: false
-			}).call(this._context, require, host)
+			}).call(vm.getGlobal(this._context), require, host)
 		})
 
 		const closure = vm.runInContext(`(function (vm, host, Contextify, Decontextify, Buffer) { ${sb} \n})`, this._context, {
@@ -319,7 +319,7 @@ class NodeVM extends EventEmitter {
 		})
 
 		Object.defineProperty(this, '_prepareRequire', {
-			value: closure.call(this._context, this, host, this._internal.Contextify, this._internal.Decontextify, this._internal.Buffer)
+			value: closure.call(vm.getGlobal(this._context), this, host, this._internal.Contextify, this._internal.Decontextify, this._internal.Buffer)
 		})
 
 		// prepare global sandbox
@@ -535,7 +535,7 @@ exports.VMScript = VMScript;
 			readFileSync(path) {
 				switch (path) {
 					case './contextify.js': return "\"use strict\";const global=this,console=host.console;\"[object Window]\"!==Object.prototype.toString.call(global)&&Object.setPrototypeOf(global,Object.prototype),Object.defineProperties(global,{global:{value:global},GLOBAL:{value:global},root:{value:global},isVM:{value:!0}});const DEBUG=!1,OPNA=\"Operation not allowed on contextified object.\",ERROR_CST=Error.captureStackTrace,FROZEN_TRAPS={set:(t,e)=>!1,setPrototypeOf:(t,e)=>!1,defineProperty:(t,e)=>!1,deleteProperty:(t,e)=>!1,isExtensible:(t,e)=>!1,preventExtensions:t=>!1},Contextified=new host.WeakMap,Decontextified=new host.WeakMap;global.VMError=class extends Error{constructor(t,e){super(t),this.name=\"VMError\",this.code=e,ERROR_CST(this,this.constructor)}};const Decontextify={proxies:new host.WeakMap,arguments:function(t){if(!host.Array.isArray(t))return new host.Array;const e=new host.Array;for(let n=0,o=t.length;n<o;n++)e[n]=Decontextify.value(t[n]);return e},instance:function(t,e,n,o){return Decontextify.object(t,{get:(r,i,a)=>{if(\"isVMProxy\"===i)return!0;if(\"constructor\"===i)return e;if(\"__proto__\"===i)return e.prototype;try{return Decontextify.value(t[i],null,n,o)}catch(t){throw Decontextify.value(t)}},getPrototypeOf:t=>e.prototype},n,o)},function:function(t,e,n,o,r){const i=Decontextify.object(t,host.Object.assign({apply:(e,n,o)=>{try{return n=Contextify.value(n),Decontextify.value(t.apply(n,Contextify.arguments(o)))}catch(t){throw Decontextify.value(t)}},construct:(e,r,a)=>{try{return Decontextify.instance(new t(...Contextify.arguments(r)),i,n,o)}catch(t){throw Decontextify.value(t)}},get:(e,i,a)=>{if(\"isVMProxy\"===i)return!0;if(r&&i in r)return r[i];if(\"constructor\"===i)return host.Function;if(\"__proto__\"===i)return host.Function.prototype;try{return Decontextify.value(t[i],null,n,o)}catch(t){throw Decontextify.value(t)}},getPrototypeOf:t=>host.Function.prototype},e),n);return i},object:function(t,e,n,o,r){const i=new host.Proxy(t,host.Object.assign({get:(e,i,a)=>{if(\"isVMProxy\"===i)return!0;if(r&&i in r)return r[i];if(\"constructor\"===i)return host.Object;if(\"__proto__\"===i)return host.Object.prototype;try{return Decontextify.value(t[i],null,n,o)}catch(t){throw Decontextify.value(t)}},set:(e,n,o,r)=>{try{return t[n]=Contextify.value(o),!0}catch(t){throw Decontextify.value(t)}},getOwnPropertyDescriptor:(e,n)=>{try{var o=host.Object.getOwnPropertyDescriptor(t,n)}catch(t){throw Decontextify.value(t)}return o?o.get||o.set?{get:Decontextify.value(o.get)||void 0,set:Decontextify.value(o.set)||void 0,enumerable:!0===o.enumerable,configurable:!0===o.configurable}:{value:Decontextify.value(o.value),writable:!0===o.writable,enumerable:!0===o.enumerable,configurable:!0===o.configurable}:void 0},defineProperty:(t,e,r)=>{try{return r.get||r.set?host.Object.defineProperty(t,e,{get:Contextify.value(r.get,null,n,o)||void 0,set:Contextify.value(r.set,null,n,o)||void 0,enumerable:!0===r.enumerable,configurable:!0===r.configurable}):host.Object.defineProperty(t,e,{value:Contextify.value(r.value,null,n,o),writable:!0===r.writable,enumerable:!0===r.enumerable,configurable:!0===r.configurable})}catch(t){throw Decontextify.value(t)}},getPrototypeOf:t=>host.Object.prototype,setPrototypeOf:t=>{throw new host.Error(OPNA)}},e,n));return Decontextify.proxies.set(t,i),Decontextified.set(i,t),i},value:function(t,e,n,o,r){if(Contextified.has(t))return Contextified.get(t);if(Decontextify.proxies.has(t))return Decontextify.proxies.get(t);switch(typeof t){case\"object\":return null===t?null:t instanceof Number?host.Number(t):t instanceof String?host.String(t):t instanceof Boolean?host.Boolean(t):t instanceof Date?Decontextify.instance(t,host.Date,n,o):t instanceof EvalError?Decontextify.instance(t,host.EvalError,n,o):t instanceof RangeError?Decontextify.instance(t,host.RangeError,n,o):t instanceof ReferenceError?Decontextify.instance(t,host.ReferenceError,n,o):t instanceof SyntaxError?Decontextify.instance(t,host.SyntaxError,n,o):t instanceof TypeError?Decontextify.instance(t,host.TypeError,n,o):t instanceof URIError?Decontextify.instance(t,host.URIError,n,o):t instanceof VMError?Decontextify.instance(t,host.VMError,n,o):t instanceof Error?Decontextify.instance(t,host.Error,n,o):t instanceof Array?Decontextify.instance(t,host.Array,n,o):t instanceof RegExp?Decontextify.instance(t,host.RegExp,n,o):t instanceof Map?Decontextify.instance(t,host.Map,n,o):t instanceof WeakMap?Decontextify.instance(t,host.WeakMap,n,o):t instanceof Set?Decontextify.instance(t,host.Set,n,o):t instanceof WeakSet?Decontextify.instance(t,host.WeakSet,n,o):t instanceof Promise?Decontextify.instance(t,host.Promise,n,o):Decontextify.object(t,e,n,o,r);case\"function\":return Decontextify.function(t,e,n,o,r);case\"undefined\":return;default:return t}}},Contextify={proxies:new host.WeakMap,arguments:function(t){if(!host.Array.isArray(t))return new Array;const e=new Array;for(let n=0,o=t.length;n<o;n++)e[n]=Contextify.value(t[n]);return e},instance:function(t,e,n,o){return Contextify.object(t,{get:(r,i,a)=>{if(\"isVMProxy\"===i)return!0;if(\"constructor\"===i)return e;if(\"__proto__\"===i)return e.prototype;try{return Contextify.value(t[i],null,n,o)}catch(t){throw Contextify.value(t)}},getPrototypeOf:t=>e.prototype},n,o)},function:function(t,e,n,o,r){const i=Contextify.object(t,host.Object.assign({apply:(e,n,o)=>{try{return n=Decontextify.value(n),Contextify.value(t.apply(n,Decontextify.arguments(o)))}catch(t){throw Contextify.value(t)}},construct:(e,r,a)=>{try{return Contextify.instance(new t(...Decontextify.arguments(r)),i,n,o)}catch(t){throw Contextify.value(t)}},get:(e,i,a)=>{if(\"isVMProxy\"===i)return!0;if(r&&i in r)return r[i];if(\"constructor\"===i)return Function;if(\"__proto__\"===i)return Function.prototype;try{return Contextify.value(t[i],null,n,o)}catch(t){throw Contextify.value(t)}},getPrototypeOf:t=>Function.prototype},e),n);return i},object:function(t,e,n,o,r){const i=new host.Proxy(t,host.Object.assign({get:(e,i,a)=>{if(\"isVMProxy\"===i)return!0;if(r&&i in r)return r[i];if(\"constructor\"===i)return Object;if(\"__proto__\"===i)return Object.prototype;try{return Contextify.value(t[i],null,n,o)}catch(t){throw Contextify.value(t)}},set:(e,n,r,i)=>{if(o&&o.protected&&\"function\"==typeof r)return!1;try{return t[n]=Decontextify.value(r),!0}catch(t){throw Contextify.value(t)}},getOwnPropertyDescriptor:(e,r)=>{try{var i=host.Object.getOwnPropertyDescriptor(t,r)}catch(t){throw Contextify.value(t)}return i?i.get||i.set?{get:Contextify.value(i.get,null,n,o)||void 0,set:Contextify.value(i.set,null,n,o)||void 0,enumerable:!0===i.enumerable,configurable:!0===i.configurable}:{value:Contextify.value(i.value,null,n,o),writable:!0===i.writable,enumerable:!0===i.enumerable,configurable:!0===i.configurable}:void 0},defineProperty:(t,e,r)=>{if(o&&o.protected&&\"function\"==typeof r.value)return!1;try{return r.get||r.set?host.Object.defineProperty(t,e,{get:Decontextify.value(r.get,null,n)||void 0,set:Decontextify.value(r.set,null,n)||void 0,enumerable:!0===r.enumerable,configurable:!0===r.configurable}):host.Object.defineProperty(t,e,{value:Decontextify.value(r.value,null,n),writable:!0===r.writable,enumerable:!0===r.enumerable,configurable:!0===r.configurable})}catch(t){throw Contextify.value(t)}},getPrototypeOf:t=>Object.prototype,setPrototypeOf:t=>{throw new VMError(OPNA)}},e,n));return Contextify.proxies.set(t,i),Contextified.set(i,t),i},value:function(t,e,n,o,r){if(Decontextified.has(t))return Decontextified.get(t);if(Contextify.proxies.has(t))return Contextify.proxies.get(t);switch(typeof t){case\"object\":return null===t?null:t instanceof host.Number?host.Number(t):t instanceof host.String?host.String(t):t instanceof host.Boolean?host.Boolean(t):t instanceof host.Date?Contextify.instance(t,Date,n,o):t instanceof host.EvalError?Contextify.instance(t,EvalError,n,o):t instanceof host.RangeError?Contextify.instance(t,RangeError,n,o):t instanceof host.ReferenceError?Contextify.instance(t,ReferenceError,n,o):t instanceof host.SyntaxError?Contextify.instance(t,SyntaxError,n,o):t instanceof host.TypeError?Contextify.instance(t,TypeError,n,o):t instanceof host.URIError?Contextify.instance(t,URIError,n,o):t instanceof host.VMError?Contextify.instance(t,VMError,n,o):t instanceof host.Error?Contextify.instance(t,Error,n,o):t instanceof host.Array?Contextify.instance(t,Array,n,o):t instanceof host.RegExp?Contextify.instance(t,RegExp,n,o):t instanceof host.Map?Contextify.instance(t,Map,n,o):t instanceof host.WeakMap?Contextify.instance(t,WeakMap,n,o):t instanceof host.Set?Contextify.instance(t,Set,n,o):t instanceof host.WeakSet?Contextify.instance(t,WeakSet,n,o):t instanceof host.Promise?Contextify.instance(t,Promise,n,o):t instanceof host.Buffer?Contextify.instance(t,LocalBuffer,n,o):Contextify.object(t,e,n,o,r);case\"function\":return Contextify.function(t,e,n,o,r);case\"undefined\":return;default:return t}},globalValue:function(t,e){return global[e]=Contextify.value(t)},readonly:function(t,e){return Contextify.value(t,null,FROZEN_TRAPS,null,e)},protected:function(t,e){return Contextify.value(t,null,null,{protected:!0},e)}},LocalBuffer=global.Buffer=Contextify.readonly(host.Buffer);return{Contextify:Contextify,Decontextify:Decontextify,Buffer:LocalBuffer};";
-					case './sandbox.js': return "const{Script:Script}=host.require(\"vm\"),fs=host.require(\"fs\"),pa=host.require(\"path\"),console=host.console,BUILTIN_MODULES=host.process.binding(\"natives\"),JSON_PARSE=JSON.parse;return((e,r)=>{\"use strict\";const t=this,n=new r.WeakMap,o={},i={},s={[\".json\"](e,r){try{var t=fs.readFileSync(r,\"utf8\")}catch(e){throw Contextify.value(e)}e.exports=JSON_PARSE(t)},[\".node\"](t,n){if(\"sandbox\"===e.options.require.context)throw new VMError(\"Native modules can be required only with context set to 'host'.\");try{t.exports=Contextify.readonly(r.require(n))}catch(e){throw Contextify.value(e)}},[\".js\"](n,o,i){if(\"sandbox\"!==e.options.require.context)try{n.exports=Contextify.readonly(r.require(o))}catch(e){throw Contextify.value(e)}else{try{var s=`(function (exports, require, module, __filename, __dirname) { 'use strict'; ${fs.readFileSync(o,\"utf8\")} \n});`,u=new Script(s,{filename:o||\"vm.js\",displayErrors:!1}).runInContext(t,{filename:o||\"vm.js\",displayErrors:!1})}catch(e){throw Contextify.value(e)}u(n.exports,n.require,n,o,i)}}},u=function(e){e=pa.resolve(e);const r=fs.existsSync(e),t=!!r&&fs.statSync(e).isDirectory();if(r&&!t)return e;if(fs.existsSync(`${e}.js`))return`${e}.js`;if(fs.existsSync(`${e}.node`))return`${e}.node`;if(fs.existsSync(`${e}.json`))return`${e}.json`;if(fs.existsSync(`${e}/package.json`)){try{var n=JSON.parse(fs.readFileSync(`${e}/package.json`,\"utf8\"));null==n.main&&(n.main=\"index.js\")}catch(e){throw new VMError(`Module '${modulename}' has invalid package.json`,\"EMODULEINVALID\")}return u(`${e}/${n.main}`)}return fs.existsSync(`${e}/index.js`)?`${e}/index.js`:fs.existsSync(`${e}/index.node`)?`${e}/index.node`:null},c=function(e){if(\"buffer\"===e)return{Buffer:Buffer};if(o[e])return o[e].exports;if(\"util\"===e)return Contextify.readonly(r.require(e),{inherits:function(e,r){e.super_=r,Object.setPrototypeOf(e.prototype,r.prototype)}});if(\"events\"===e)try{const n=new Script(`(function (exports, require, module, process) { 'use strict'; ${BUILTIN_MODULES[e]} \n});`,{filename:`${e}.vm.js`}),i=o[e]={exports:{},require:c};return n.runInContext(t)(i.exports,i.require,i,r.process),i.exports}catch(e){throw Contextify.value(e)}return Contextify.readonly(r.require(e))},l=function(t){return function(n){if(e.options.nesting&&\"vm2\"===n)return{VM:Contextify.readonly(r.VM),NodeVM:Contextify.readonly(r.NodeVM)};if(!e.options.require)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\");if(null==n)throw new VMError(\"Module '' not found.\",\"ENOTFOUND\");if(\"string\"!=typeof n)throw new VMError(`Invalid module name '${n}'`,\"EINVALIDNAME\");if(e.options.require.mock&&e.options.require.mock[n])return Contextify.readonly(e.options.require.mock[n]);if(BUILTIN_MODULES[n]){if(r.Array.isArray(e.options.require.builtin)){if(e.options.require.builtin.indexOf(\"*\")>=0){if(e.options.require.builtin.indexOf(`-${n}`)>=0)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\")}else if(-1===e.options.require.builtin.indexOf(n))throw new VMError(`Access denied to require '${n}'`,\"EDENIED\")}else{if(!e.options.require.builtin)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\");if(!e.options.require.builtin[n])throw new VMError(`Access denied to require '${n}'`,\"EDENIED\")}return c(n)}if(!e.options.require.external)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\");if(/^(\.|\.\/|\.\.\/)/.exec(n)){if(!t)throw new VMError(\"You must specify script path to load relative modules.\",\"ENOPATH\");o=u(`${t}/${n}`)}else if(/^(\/|\\|[a-zA-Z]:\\)/.exec(n))var o=u(n);else{if(!t)throw new VMError(\"You must specify script path to load relative modules.\",\"ENOPATH\");const e=t.split(pa.sep);for(;e.length;){let r=e.join(pa.sep);if(o=u(`${r}${pa.sep}node_modules${pa.sep}${n}`))break;e.pop()}}if(!o)throw new VMError(`Cannot find module '${n}'`,\"ENOTFOUND\");if(i[o])return i[o].exports;const f=pa.dirname(o),a=pa.extname(o);if(e.options.require.root){const r=pa.resolve(e.options.require.root);if(0!==f.indexOf(r))throw new VMError(`Module '${n}' is not allowed to be required. The path is outside the border!`,\"EDENIED\")}const p=i[o]={filename:o,exports:{},require:l(f)};if(s[a])return s[a](p,o,f),p.exports;throw new VMError(`Failed to load '${n}': Unknown type.`,\"ELOADFAIL\")}};return t.setTimeout=function(e,t,...o){const i=r.setTimeout(function(){e.apply(null,o)},t),s={ref:()=>i.ref(),unref:()=>i.unref()};return n.set(s,i),s},t.setInterval=function(e,t,...o){const i=r.setInterval(function(){e.apply(null,o)},t),s={ref:()=>i.ref(),unref:()=>i.unref()};return n.set(s,i),s},t.setImmediate=function(e,...t){const o=r.setImmediate(function(){e.apply(null,t)}),i={ref:()=>o.ref(),unref:()=>o.unref()};return n.set(i,o),i},t.clearTimeout=function(e){return r.clearTimeout(n.get(e)),null},t.clearInterval=function(e){return r.clearInterval(n.get(e)),null},t.clearImmediate=function(e){return r.clearImmediate(n.get(e)),null},t.process={argv:[],title:r.process.title,version:r.process.version,versions:Contextify.readonly(r.process.versions),arch:r.process.arch,platform:r.process.platform,env:{},pid:r.process.pid,features:Contextify.readonly(r.process.features),nextTick:e=>r.process.nextTick(()=>e.call(null)),hrtime:()=>r.process.hrtime(),cwd:()=>r.process.cwd(),on(e,t){if(\"beforeExit\"!==e&&\"exit\"!==e)throw new Error(`Access denied to listen for '${e}' event.`);return r.process.on(e,Decontextify.value(t)),this},once(e,t){if(\"beforeExit\"!==e&&\"exit\"!==e)throw new Error(`Access denied to listen for '${e}' event.`);return r.process.once(e,Decontextify.value(t)),this},listeners:e=>Contextify.readonly(r.process.listeners(e)),removeListener(e,t){return r.process.removeListener(e,Decontextify.value(t)),this},umask(){if(arguments.length)throw new Error(\"Access denied to set umask.\");return r.process.umask()}},\"inherit\"===e.options.console?t.console=Contextify.readonly(r.console):\"redirect\"===e.options.console&&(t.console={log:(...r)=>(e.emit(\"console.log\",...Decontextify.arguments(r)),null),info:(...r)=>(e.emit(\"console.info\",...Decontextify.arguments(r)),null),warn:(...r)=>(e.emit(\"console.warn\",...Decontextify.arguments(r)),null),error:(...r)=>(e.emit(\"console.error\",...Decontextify.arguments(r)),null),dir:(...r)=>(e.emit(\"console.dir\",...Decontextify.arguments(r)),null),time:()=>{},timeEnd:()=>{},trace:(...r)=>(e.emit(\"console.trace\",...Decontextify.arguments(r)),null)}),l})(vm,host);";
+					case './sandbox.js': return "const{Script:Script}=host.require(\"vm\"),fs=host.require(\"fs\"),pa=host.require(\"path\"),console=host.console,BUILTIN_MODULES=host.process.binding(\"natives\"),JSON_PARSE=JSON.parse;return((e,r)=>{\"use strict\";const t=this,n=new r.WeakMap,o={},i={},s={\".json\"(e,r){try{var t=fs.readFileSync(r,\"utf8\")}catch(e){throw Contextify.value(e)}e.exports=JSON_PARSE(t)},\".node\"(t,n){if(\"sandbox\"===e.options.require.context)throw new VMError(\"Native modules can be required only with context set to 'host'.\");try{t.exports=Contextify.readonly(r.require(n))}catch(e){throw Contextify.value(e)}},\".js\"(n,o,i){if(\"sandbox\"!==e.options.require.context)try{n.exports=Contextify.readonly(r.require(o))}catch(e){throw Contextify.value(e)}else{try{var s=`(function (exports, require, module, __filename, __dirname) { 'use strict'; ${fs.readFileSync(o,\"utf8\")} \n});`;var u=new Script(s,{filename:o||\"vm.js\",displayErrors:!1}).runInContext(t,{filename:o||\"vm.js\",displayErrors:!1})}catch(e){throw Contextify.value(e)}u(n.exports,n.require,n,o,i)}}},u=function(e){e=pa.resolve(e);const r=fs.existsSync(e),t=!!r&&fs.statSync(e).isDirectory();if(r&&!t)return e;if(fs.existsSync(`${e}.js`))return`${e}.js`;if(fs.existsSync(`${e}.node`))return`${e}.node`;if(fs.existsSync(`${e}.json`))return`${e}.json`;if(fs.existsSync(`${e}/package.json`)){try{var n=JSON.parse(fs.readFileSync(`${e}/package.json`,\"utf8\"));null==n.main&&(n.main=\"index.js\")}catch(e){throw new VMError(`Module '${modulename}' has invalid package.json`,\"EMODULEINVALID\")}return u(`${e}/${n.main}`)}return fs.existsSync(`${e}/index.js`)?`${e}/index.js`:fs.existsSync(`${e}/index.node`)?`${e}/index.node`:null},c=function(e){if(\"buffer\"===e)return{Buffer:Buffer};if(o[e])return o[e].exports;if(\"util\"===e)return Contextify.readonly(r.require(e),{inherits:function(e,r){e.super_=r,Object.setPrototypeOf(e.prototype,r.prototype)}});if(\"events\"===e)try{const n=new Script(`(function (exports, require, module, process) { 'use strict'; ${BUILTIN_MODULES[e]} \n});`,{filename:`${e}.vm.js`}),i=o[e]={exports:{},require:c};return n.runInContext(t)(i.exports,i.require,i,r.process),i.exports}catch(e){throw Contextify.value(e)}return Contextify.readonly(r.require(e))},l=function(t){return function(n){if(e.options.nesting&&\"vm2\"===n)return{VM:Contextify.readonly(r.VM),NodeVM:Contextify.readonly(r.NodeVM)};if(!e.options.require)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\");if(null==n)throw new VMError(\"Module '' not found.\",\"ENOTFOUND\");if(\"string\"!=typeof n)throw new VMError(`Invalid module name '${n}'`,\"EINVALIDNAME\");if(e.options.require.mock&&e.options.require.mock[n])return Contextify.readonly(e.options.require.mock[n]);if(BUILTIN_MODULES[n]){if(r.Array.isArray(e.options.require.builtin)){if(e.options.require.builtin.indexOf(\"*\")>=0){if(e.options.require.builtin.indexOf(`-${n}`)>=0)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\")}else if(-1===e.options.require.builtin.indexOf(n))throw new VMError(`Access denied to require '${n}'`,\"EDENIED\")}else{if(!e.options.require.builtin)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\");if(!e.options.require.builtin[n])throw new VMError(`Access denied to require '${n}'`,\"EDENIED\")}return c(n)}if(!e.options.require.external)throw new VMError(`Access denied to require '${n}'`,\"EDENIED\");if(/^(\.|\.\/|\.\.\/)/.exec(n)){if(!t)throw new VMError(\"You must specify script path to load relative modules.\",\"ENOPATH\");var o=u(`${t}/${n}`)}else if(/^(\/|\\|[a-zA-Z]:\\)/.exec(n))o=u(n);else{if(!t)throw new VMError(\"You must specify script path to load relative modules.\",\"ENOPATH\");const e=t.split(pa.sep);for(;e.length;){let r=e.join(pa.sep);if(o=u(`${r}${pa.sep}node_modules${pa.sep}${n}`))break;e.pop()}}if(!o)throw new VMError(`Cannot find module '${n}'`,\"ENOTFOUND\");if(i[o])return i[o].exports;const f=pa.dirname(o),a=pa.extname(o);if(e.options.require.root){const r=pa.resolve(e.options.require.root);if(0!==f.indexOf(r))throw new VMError(`Module '${n}' is not allowed to be required. The path is outside the border!`,\"EDENIED\")}const p=i[o]={filename:o,exports:{},require:l(f)};if(s[a])return s[a](p,o,f),p.exports;throw new VMError(`Failed to load '${n}': Unknown type.`,\"ELOADFAIL\")}};return t.setTimeout=function(e,t,...o){const i=r.setTimeout(function(){e.apply(null,o)},t),s={ref:()=>i.ref(),unref:()=>i.unref()};return n.set(s,i),s},t.setInterval=function(e,t,...o){const i=r.setInterval(function(){e.apply(null,o)},t),s={ref:()=>i.ref(),unref:()=>i.unref()};return n.set(s,i),s},t.setImmediate=function(e,...t){const o=r.setImmediate(function(){e.apply(null,t)}),i={ref:()=>o.ref(),unref:()=>o.unref()};return n.set(i,o),i},t.clearTimeout=function(e){return r.clearTimeout(n.get(e)),null},t.clearInterval=function(e){return r.clearInterval(n.get(e)),null},t.clearImmediate=function(e){return r.clearImmediate(n.get(e)),null},t.process={argv:[],title:r.process.title,version:r.process.version,versions:Contextify.readonly(r.process.versions),arch:r.process.arch,platform:r.process.platform,env:{},pid:r.process.pid,features:Contextify.readonly(r.process.features),nextTick:e=>r.process.nextTick(()=>e.call(null)),hrtime:()=>r.process.hrtime(),cwd:()=>r.process.cwd(),on(e,t){if(\"beforeExit\"!==e&&\"exit\"!==e)throw new Error(`Access denied to listen for '${e}' event.`);return r.process.on(e,Decontextify.value(t)),this},once(e,t){if(\"beforeExit\"!==e&&\"exit\"!==e)throw new Error(`Access denied to listen for '${e}' event.`);return r.process.once(e,Decontextify.value(t)),this},listeners:e=>Contextify.readonly(r.process.listeners(e)),removeListener(e,t){return r.process.removeListener(e,Decontextify.value(t)),this},umask(){if(arguments.length)throw new Error(\"Access denied to set umask.\");return r.process.umask()}},\"inherit\"===e.options.console?t.console=Contextify.readonly(r.console):\"redirect\"===e.options.console&&(t.console={log:(...r)=>(e.emit(\"console.log\",...Decontextify.arguments(r)),null),info:(...r)=>(e.emit(\"console.info\",...Decontextify.arguments(r)),null),warn:(...r)=>(e.emit(\"console.warn\",...Decontextify.arguments(r)),null),error:(...r)=>(e.emit(\"console.error\",...Decontextify.arguments(r)),null),dir:(...r)=>(e.emit(\"console.dir\",...Decontextify.arguments(r)),null),time:()=>{},timeEnd:()=>{},trace:(...r)=>(e.emit(\"console.trace\",...Decontextify.arguments(r)),null)}),l})(vm,host);";
 					default: throw new Error('File '+ path +' not present.');
 				}
 			}
@@ -551,50 +551,370 @@ exports.VMScript = VMScript;
 		case 'vm':
 			const wrapper = {exports: {}};
 			((module, exports) => {
-				CONTEXT_MINIMAL = [
-	'String', 'Array', 'Boolean', 'Date', 'Function', 'Number', 'RegExp', 'Object',
-	'Proxy', 'Reflect', 'Map', 'WeakMap', 'Set', 'WeakSet', 'Promise', 'Symbol',
-	'Error', 'EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError',
-	'Infinity', 'JSON', 'Math', 'NaN', 'undefined',
-	'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape', 'unescape',
-	'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt'
-]
+				
+const TestFunction = Function;
 
 class Script {
+	
 	constructor(code, options) {
-		this._code = code;
+		this._code = String(code);
+		TestFunction('"use strict";'+code);
 	}
+	
+	runInContext(contextifiedSandbox, options) {
+		return contextifiedSandbox.eval(this._code);
+	}
+	
+};
 
-	runInContext(context, options) {
-		return context.eval(this._code);
+function init(iframe, allowEval, strictMode, asyncAllowed, wasmAllowed) {
+	'use strict';
+	const stdlib = [
+		'Object',
+		//'Function',
+		'Array',
+		'Number',
+		'parseFloat',
+		'parseInt',
+		'Infinity',
+		'NaN',
+		'undefined',
+		'Boolean',
+		'String',
+		'Symbol',
+		'Date',
+		'Promise',
+		'RegExp',
+		'Error',
+		'EvalError',
+		'RangeError',
+		'ReferenceError',
+		'SyntaxError',
+		'TypeError',
+		'URIError',
+		'JSON',
+		'Math',
+		//'console',
+		'Intl',
+		'ArrayBuffer',
+		'Uint8Array',
+		'Int8Array',
+		'Uint16Array',
+		'Int16Array',
+		'Uint32Array',
+		'Int32Array',
+		'Float32Array',
+		'Float64Array',
+		'Uint8ClampedArray',
+		'BigUint64Array',
+		'BigInt64Array',
+		'DataView',
+		'Map',
+		'BigInt',
+		'Set',
+		'WeakMap',
+		'WeakSet',
+		'Proxy',
+		'Reflect',
+		'decodeURI',
+		'decodeURIComponent',
+		'encodeURI',
+		'encodeURIComponent',
+		'escape',
+		'unescape',
+		//'eval',
+		'isFinite',
+		'isNaN',
+		'SharedArrayBuffer',
+		'Atomics',
+		//'globalThis',
+		'WebAssembly'
+	];
+	const realGlobal = gthis;
+	const {Function, eval: eval_, Array, RegExp, Proxy, Promise, Object, Symbol, ReferenceError, Reflect, EvalError, SyntaxError} = realGlobal;
+	const {join, pop} = Array.prototype;
+	const {test} = RegExp.prototype;
+	const {setPrototypeOf, defineProperty, getOwnPropertyNames, getOwnPropertyDescriptor} = Object;
+	const {unscopables} = Symbol;
+	const {apply: rApply, set: rSet} = Reflect;
+	
+	function getOrUndefined(code) {
+		try{
+			return eval_(code);
+		}catch(ex){}
 	}
+	
+	const GeneratorFunction = getOrUndefined('(function*(){}).constructor');
+	const AsyncFunction = getOrUndefined('(async function(){}).constructor');
+	const AsyncGeneratorFunction = getOrUndefined('(async function*(){}).constructor');
+	
+	const global = {};
+	
+	const consts = [];
+	const fastAsks = ['Object'];
+	const fasts = [];
+	let i;
+	for(i=0; i<fastAsks.length; i++){
+		const key = fastAsks[i];
+		let desc
+		const j = stdlib.indexOf(key);
+		if(j===-1){
+			fasts.push(key);
+			continue;
+		}else{
+			stdlib[j] = '';
+			desc = getOwnPropertyDescriptor(realGlobal, key);
+			if (!desc || desc.get || desc.set) {
+				fasts.push(key);
+				continue;
+			}
+		}
+		if (!desc.writable && !desc.configurable) {
+			// These properties are not writeable and so
+			// we can optimise them by defining them as const
+			consts.push(key);
+			defineProperty(global, key, desc);
+		} else {
+			fasts.push(key);
+		}
+	}
+	for(i=0; i<stdlib.length; i++){
+		const key = stdlib[i];
+		if (!key)
+			continue;
+		const desc = getOwnPropertyDescriptor(realGlobal, key);
+		if (desc) {
+			defineProperty(global, key, desc);
+			if (!desc.writable && !desc.configurable) {
+				// These properties are not writeable and so
+				// we can optimise them by defining them as const
+				consts.push(key);
+			}
+		}
+	}
+	
+	const optimiseCode = (consts.length === 0 ? '' : 'const {'+consts.join(',')+'}=this;')+
+		(fasts.length === 0 ? '' : 'let '+fasts.join(',')+';');
+	
+	let allowEvalForEntry = false;
+	const strictGlobalProxyHandler = {
+		__proto__: null,
+		get(target, key) {
+			if (key === 'eval') {
+				if (allowEvalForEntry) {
+					allowEvalForEntry = false;
+					return eval_;
+				}
+			}else if (key === unscopables) {
+				return undefined;
+			}
+			if(key in global)
+				return global[key];
+			throw new ReferenceError(key + ' is not defined');
+		},
+		has(target, key) {
+			return key in global || key in realGlobal || key === 'eval';
+		},
+		set(target, key, value) {
+			if (!(key in global))
+				throw new ReferenceError(key + ' is not defined');
+			global[key] = value;
+			return true;
+		}
+	};
+	const sloppyGlobalProxyHandler = {
+		__proto__: null,
+		get(target, key) {
+			if (key === 'eval') {
+				if (allowEvalForEntry) {
+					allowEvalForEntry = false;
+					return eval_;
+				}
+			}else if (key === unscopables) {
+				return undefined;
+			}
+			return global[key];
+		},
+		has(target, key) {
+			return true;
+		},
+		set(target, key, value) {
+			rSet(global, key, value);
+			return true;
+		}
+	};
+	const proxyTarget = Object.create(null);
+	const sloppyGlobals = new Proxy(proxyTarget, sloppyGlobalProxyHandler);
+	const strictGlobals = strictMode===0 ? sloppyGlobals : new Proxy(proxyTarget, strictGlobalProxyHandler);
+	const sloppyEval = new Function('with(arguments[0]){return function(){"use strict";return eval(arguments[0]);}}')(sloppyGlobals);
+	const strictEval = strictMode===0 ? sloppyEval : new Function('with(arguments[0]){'+optimiseCode+'return function(){"use strict";return eval(arguments[0]);}}')(strictGlobals);
+	
+	for(i=0; i<fasts.length; i++){
+		const key = fasts[i];
+		let value = undefined;
+		const std = stdlib.includes(key);
+		if(key){
+			const desc = getOwnPropertyDescriptor(realGlobal, key);
+			if (desc && !desc.get && !desc.set) {
+				value = desc.value;
+			}
+		}
+		allowEvalForEntry = true;
+		const desc = strictEval('({get(){return '+key+';},set(value){'+key+'=value;},enumerable:false,configurable:false})');
+		defineProperty(global, key, desc);
+		global[key] = value;
+	}
+	
+	function rejectAsync(){
+		throw new SyntaxError('Async functions are disabled for this context');
+	}
+	
+	function rejectEval(){
+		throw new EvalError('Code generation from strings disallowed for this context');
+	}
+	
+	const testAsync = setPrototypeOf(/\basync\b/, null);
+
+	const checkAsync = asyncAllowed ? function checkAsync(source){
+		return source
+	} : function checkAsync(source){
+		// Filter async functions, await can only be in them.
+		if (rApply(test, testAsync, [source])) {
+			throw rejectAsync();
+		}
+		return source;
+	}
+		
+	const testStrict = setPrototypeOf(/('use strict'|"use strict")/, null);
+	
+	function isStrict(body) {
+		return rApply(test, testStrict, [body]);
+	}
+	
+	function outerEval(source) {
+		checkAsync(source);
+		const strict = isStrict(source);
+		const func = strict ? strictEval : sloppyEval;
+		try{
+			allowEvalForEntry = true;
+			return func(source);
+		}finally{
+			allowEvalForEntry = false;
+		}
+	}
+	
+	const sloppyFunctionHandler = {
+		__proto__: null,
+		apply(target, thiz, args) {
+			return rApply(target, thiz === undefined ? global : thiz, args);
+		}
+	};
+	
+	const proxyFunction = allowEval ? function(ctor, name) {
+		const initFunction = typeof name === 'string' ? function initFunction(args) {
+			const body = args.length===0 ? '' : checkAsync('' + rApply(pop, args, []));
+			const params = checkAsync(rApply(join, args, [',']));
+			ctor(params, body); // This is just here to see if params & body are valid
+			const strict = isStrict(body);
+			const code = '('+ name + '(' + params + '){' + body + '})';
+			if (strict) return strictEval(code);
+			const func = sloppyEval(code);
+			return new Proxy(func, sloppyFunctionHandler);
+		} : name;
+		const handler = {
+			__proto__: null,
+			apply(target, thiz, args) {
+				return initFunction(args);
+			},
+			construct(target, args, newTarget) {
+				return initFunction(args);
+			}
+		};
+		return new Proxy(ctor, handler);
+	}: function (ctor, name){
+		const handler = {
+			__proto__: null,
+			apply: rejectEval,
+			construct: rejectEval
+		};
+		return new Proxy(ctor, handler);
+	}
+	
+	const evalProxyHandler = {
+		__proto__: null,
+		apply: allowEval? function apply(target, thiz, args) {
+			if (args.length === 0)
+				return undefined;
+			const script = args[0];
+			if (typeof script !== 'string')
+				return script;
+			return outerEval(script);
+		}: rejectEval
+	};
+	
+	function override(obj, prop, value) {
+		const desc = getOwnPropertyDescriptor(obj, prop);
+		desc.value = value;
+		defineProperty(obj, prop, desc);
+	}
+	
+	override(Function.prototype, 'constructor', proxyFunction(Function, 'function'));
+	if(GeneratorFunction) override(GeneratorFunction.prototype, 'constructor', proxyFunction(GeneratorFunction, 'function*'));
+	if(AsyncFunction) override(AsyncFunction.prototype, 'constructor', proxyFunction(AsyncFunction, asyncAllowed ? 'async function' : rejectAsync));
+	if(AsyncGeneratorFunction) override(AsyncGeneratorFunction.prototype, 'constructor', proxyFunction(AsyncGeneratorFunction, asyncAllowed ? 'async function*' : rejectAsync));
+
+	if(!asyncAllowed && Promise){
+		const AsyncRejectHandler = {
+			__proto__: null,
+			apply: rejectAsync
+		};
+		Promise.prototype.then = new Proxy(Promise.prototype.then, AsyncRejectHandler);
+		if(Promise.prototype.finally) Promise.prototype.finally = new Proxy(Promise.prototype.finally, AsyncRejectHandler);
+		if(Promise.prototype.catch) Promise.prototype.catch = new Proxy(Promise.prototype.catch, AsyncRejectHandler);
+	}
+	
+	Object.defineProperties(global, {
+		Function: {
+			value: Function.prototype.constructor,
+			configurable: true,
+			writeable: true,
+			enumerable: false
+		},
+		eval: {
+			value: new Proxy(eval, evalProxyHandler),
+			configurable: true,
+			writeable: true,
+			enumerable: false
+		},
+		globalThis: {
+			value: global,
+			configurable: true,
+			writeable: true,
+			enumerable: false
+		}
+	});
+	return {__proto__: null, global, eval: outerEval};
+}
+
+function createContext(sandbox, options = {}) {
+	const gen = options.codeGeneration || {};
+	const {strings, wasm} = gen;
+	const iframe = document.createElement('iframe');
+	iframe.style.display = 'none';
+	document.body.appendChild(iframe);
+	return iframe.contentWindow.eval('const gthis=this;('+init+')')(iframe, strings === undefined || strings, 1, false, wasm === undefined || wasm);
+}
+
+function getGlobal(context) {
+	return context.global;
 }
 
 exports.Script = Script;
-exports.createContext = function(sandbox, type = CONTEXT_MINIMAL) {
-	const iframe = document.createElement('iframe');
-	iframe.classList.add('vm2-context');
-	iframe.style.display = 'none';
-	document.body.appendChild(iframe);
-
-	if (sandbox) {
-		Object.keys(sandbox).forEach((key) => {
-			iframe.contentWindow[key] = sandbox[key];
-		})
-	}
-
-	// Remove unwanted window properties
-	Object.getOwnPropertyNames(iframe.contentWindow).forEach((key) => {
-		if (type.indexOf(key) === -1) {
-			delete iframe.contentWindow[key]
-		}
-	})
-
-	return iframe.contentWindow;
-}
+exports.createContext = createContext;
 exports.disposeContext = (context) => {
 	document.body.removeChild(context);
 }
+exports.getGlobal = getGlobal;
 exports.runInContext = (code, context, options) => {
 	return new Script(code).runInContext(context, options);
 }
