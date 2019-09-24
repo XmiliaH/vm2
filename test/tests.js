@@ -409,6 +409,7 @@ describe('VM', () => {
 		let vm2 = new VM();
 		assert.strictEqual(vm2.run(`window`), undefined, '#1');
 		assert.strictEqual(vm2.run(`document`), undefined, '#2');
+		assert.strictEqual(vm2.run('Object.getPrototypeOf((function*(){}).constructor)'), vm2.run('Function'), '#3');
 	});
 
 	after(() => {

@@ -310,7 +310,7 @@ class NodeVM extends EventEmitter {
 			value: vm.runInContext(`(function(require, host) { ${cf} \n})`, this._context, {
 				filename: `${__dirname}/contextify.js`,
 				displayErrors: false
-			}).call(vm.getGlobal(this._context), require, host)
+			}).call(this._context, require, host)
 		})
 
 		const closure = vm.runInContext(`(function (vm, host, Contextify, Decontextify, Buffer) { ${sb} \n})`, this._context, {
@@ -319,7 +319,7 @@ class NodeVM extends EventEmitter {
 		})
 
 		Object.defineProperty(this, '_prepareRequire', {
-			value: closure.call(vm.getGlobal(this._context), this, host, this._internal.Contextify, this._internal.Decontextify, this._internal.Buffer)
+			value: closure.call(this._context, this, host, this._internal.Contextify, this._internal.Decontextify, this._internal.Buffer)
 		})
 
 		// prepare global sandbox
@@ -858,10 +858,20 @@ function init(iframe, allowEval, strictMode, asyncAllowed, wasmAllowed) {
 		defineProperty(obj, prop, desc);
 	}
 	
-	override(Function.prototype, 'constructor', proxyFunction(Function, 'function'));
-	if(GeneratorFunction) override(GeneratorFunction.prototype, 'constructor', proxyFunction(GeneratorFunction, 'function*'));
-	if(AsyncFunction) override(AsyncFunction.prototype, 'constructor', proxyFunction(AsyncFunction, asyncAllowed ? 'async function' : rejectAsync));
-	if(AsyncGeneratorFunction) override(AsyncGeneratorFunction.prototype, 'constructor', proxyFunction(AsyncGeneratorFunction, asyncAllowed ? 'async function*' : rejectAsync));
+	const proxiedFunction = proxyFunction(Function, 'function');
+	override(Function.prototype, 'constructor', proxiedFunction);
+	if(GeneratorFunction) {
+		Object.setPrototypeOf(GeneratorFunction, proxiedFunction);
+		override(GeneratorFunction.prototype, 'constructor', proxyFunction(GeneratorFunction, 'function*'));
+	}
+	if(AsyncFunction) {
+		Object.setPrototypeOf(AsyncFunction, proxiedFunction);
+		override(AsyncFunction.prototype, 'constructor', proxyFunction(AsyncFunction, asyncAllowed ? 'async function' : rejectAsync));
+	}
+	if(AsyncGeneratorFunction) {
+		Object.setPrototypeOf(AsyncGeneratorFunction, proxiedFunction);
+		override(AsyncGeneratorFunction.prototype, 'constructor', proxyFunction(AsyncGeneratorFunction, asyncAllowed ? 'async function*' : rejectAsync));
+	}
 
 	if(!asyncAllowed && Promise){
 		const AsyncRejectHandler = {
@@ -875,7 +885,7 @@ function init(iframe, allowEval, strictMode, asyncAllowed, wasmAllowed) {
 	
 	Object.defineProperties(global, {
 		Function: {
-			value: Function.prototype.constructor,
+			value: proxiedFunction,
 			configurable: true,
 			writeable: true,
 			enumerable: false
